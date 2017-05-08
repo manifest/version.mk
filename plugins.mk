@@ -74,3 +74,7 @@ endef
 define version
 $(if $(findstring release/,$(call git_branch)),$(call version_release_branch),$(call version_other_branch))
 endef
+
+.PHONY: version
+version:
+	$(verbose) echo $(call version)
