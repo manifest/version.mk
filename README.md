@@ -50,6 +50,14 @@ $ make && cat ebin/*.app
 ]}
 ```
 
+It's possible to provide an external build value,
+making integration with CI software easier.
+
+```bash
+$ VERSION_BUILD=1 make version
+0.1.0-2a5f212+1
+```
+
 
 
 ### License
