@@ -23,17 +23,19 @@
 ## ----------------------------------------------------------------------------
 
 PROJECT_VERSION = $(call version)
+PROJECT_VERSION_INITIAL ?= 0.1.0
+PROJECT_VERSION_BUILD_DEFAULT ?= git
+
+define version_regex
+(?:v?)([0-9]+\.[0-9]+\.[0-9]+(?:-(?:[0-9\w]+\.?)+)?)
+endef
 
 define git_tag
-$(shell git show-ref --tags 1>/dev/null && git describe --tags | perl -nle 'if (m{v([0-9\.]+)}) { print $$1 } else { exit 1 }')
+$(shell git show-ref --tags 1>/dev/null && git describe --tags | perl -nle 'if (m{$(call version_regex)}) { print $$1 } else { exit 1 }')
 endef
 
 define git_short_hash
 $(shell git log -1 --format=%h)
-endef
-
-define git_short_hash_label
--$(git_short_hash)
 endef
 
 define git_branch
@@ -41,36 +43,29 @@ $(shell git rev-parse --abbrev-ref HEAD)
 endef
 
 define git_release_branch_version
-$(shell echo $(call git_branch) | perl -nle 'if (m{release/v([0-9\.]+)}) { print $$1 } else { exit 1 }')
+$(shell echo $(call git_branch) | perl -nle 'if (m{release\/$(call version_regex)}) { print $$1 } else { exit 1 }')
 endef
 
-define git_prefixed_branch_name
-$(shell echo $(call git_branch) | perl -nle 'if (m{\w+/(.*)}) { print $$1 } else { exit 1 }')
+define version_prerelease_label
+$(if $(PROJECT_VERSION_PRERELEASE),-$(PROJECT_VERSION_PRERELEASE),)
 endef
 
 define version_build_label
-$(if $(VERSION_BUILD),+$(VERSION_BUILD),)
+$(if $(PROJECT_VERSION_BUILD),+$(PROJECT_VERSION_BUILD),$(if $(findstring git,$(PROJECT_VERSION_BUILD_DEFAULT)),+$(call git_short_hash),$()))
 endef
 
-define version_initial
-0.1.0
+define version_initial_label
+$(PROJECT_VERSION_INITIAL)
 endef
 
 define version_release_branch
-$(if $(call git_release_branch_version),$(call git_release_branch_version),$(if $(call git_tag),$(call git_tag),$(call version_initial)))$(git_short_hash_label)$(version_build_label)
+$(if $(call git_release_branch_version),$(call git_release_branch_version),$(if $(call git_tag),$(call git_tag),$(call version_initial_label)))$(version_prerelease_label)$(version_build_label)
 endef
 
 define version_other_branch
-$(if $(call git_tag),$(call git_tag),$(call version_initial))$(git_short_hash_label)$(version_build_label)
+$(if $(call git_tag),$(call git_tag),$(call version_initial_label))$(version_prerelease_label)$(version_build_label)
 endef
 
-## Returns a version string in SemVer format: 'x.y.z-hash+build'.
-## http://semver.org
-##
-## Extracts version from sources in the following order of priority:
-## - branch: 'release/vx.y.z'
-## - tag: 'vx.y.z'
-## - version_initial
 define version
 $(if $(findstring release/,$(call git_branch)),$(call version_release_branch),$(call version_other_branch))
 endef
