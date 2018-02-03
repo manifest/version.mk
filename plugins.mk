@@ -1,7 +1,7 @@
 ## ----------------------------------------------------------------------------
 ## The MIT License
 ##
-## Copyright (c) 2017 Andrei Nesterov <ae.nesterov@gmail.com>
+## Copyright (c) 2017-2018 Andrei Nesterov <ae.nesterov@gmail.com>
 ##
 ## Permission is hereby granted, free of charge, to any person obtaining a copy
 ## of this software and associated documentation files (the "Software"), to
@@ -27,7 +27,7 @@ PROJECT_VERSION_INITIAL ?= 0.1.0
 PROJECT_VERSION_BUILD_DEFAULT ?= git
 
 define version_regex
-(?:v?)([0-9]+\.[0-9]+\.[0-9]+(?:-(?:[0-9\w]+\.?)+)?)
+(?:v?)([0-9]+\.[0-9]+\.[0-9]+)
 endef
 
 define git_tag
@@ -66,8 +66,12 @@ define version_other_branch
 $(if $(call git_tag),$(call git_tag),$(call version_initial_label))$(version_prerelease_label)$(version_build_label)
 endef
 
+define version_master_branch
+$(if $(call git_tag),$(call git_tag),$(call version_initial_label))$(version_prerelease_label)
+endef
+
 define version
-$(if $(findstring release/,$(call git_branch)),$(call version_release_branch),$(call version_other_branch))
+$(if $(findstring master,$(call git_branch)),$(call version_master_branch),$(call version_other_branch))
 endef
 
 .PHONY: version
